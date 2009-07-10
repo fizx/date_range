@@ -26,8 +26,14 @@ describe DateRange do
       range.last.should == Chronic.parse("jan 1 2009 11pm", :guess => false).last
     end
     
-    it "should raise on odd input" do
-      lambda { DateRange.parse("dsafasdfas") }.should raise_error(DateRangeError)
+    it "should return nil on  odd input" do
+      DateRange.parse("dsafasdfas").should be_nil
+    end
+    
+    it "should parse this" do
+      range = DateRange.parse("thursday from 9 til 5")
+      range.first.should == Chronic.parse("this thursday 9am", :guess => false).first
+      range.last.should == Chronic.parse("this thursday 5pm", :guess => false).last
     end
     
     it "should parse something chronic can't get" do
@@ -52,6 +58,27 @@ describe DateRange do
       range = DateRange.parse("Sept 17-28 2009")
       range.first.should == Chronic.parse("9/17/2009", :guess => false).first
       range.last.should == Chronic.parse("9/28/2009", :guess => false).last      
+      
+    end
+    
+    it "should handle repeating ranges" do
+      range = DateRange.parse("thursdays")
+      range.should be_repeating_weekly
+      
+      range = DateRange.parse("this thursdays")
+      range.should_not be_repeating_weekly
+
+      range = DateRange.parse("evenings")
+      range.should_not be_repeating_weekly
+      range.should be_repeating_daily
+
+      range = DateRange.parse("thursday evenings")
+      range.should be_repeating_weekly
+      range.should_not be_repeating_daily
+
+      range = DateRange.parse("this thursday evenings")
+      range.should_not be_repeating_weekly
+      range.should_not be_repeating_daily
       
     end
   end

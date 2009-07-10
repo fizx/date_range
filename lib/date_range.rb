@@ -1,17 +1,17 @@
 require "chronic"
 class DateRangeError < RuntimeError; end
 class DateRange < Range
-  DELIMITER = /\-|\buntil\b|\bto\b/i
+  DELIMITER = /\-|\buntil\b|\bto\b|\btil\b/i
+  IGNORE = /\b(from)\b/i
   AMPM = /\d\s*(am|pm)/i
   NUMERIC = /\A\s*\d+\s*\Z/
   ENDS_NUMERIC = /(\s*)(\d+)(\s*)\Z/
   
   def self.parse(string)
     
-    # range = DateRange.parse("9/17-28")
-    # range.first.should == Chronic.parse("9/17/2009", :guess => false).first
-    # range.last.should == Chronic.parse("9/28/2009", :guess => false).last      
-    # 
+    string.gsub!(IGNORE, '')
+    
+    string.gsub!(/([a-z]+)\s+(\d+)\s*\-\s*(\d+)\s+(\d{4})/i, '\1 \2 \4 - \1 \3 \4')
     
     # "Sept 17-28 2009" => "Sept 17 2009 - Sept 28 2009"
     string.gsub!(/([a-z]+)\s+(\d+)\s*\-\s*(\d+)\s+(\d{4})/i, '\1 \2 \4 - \1 \3 \4')
@@ -29,13 +29,9 @@ class DateRange < Range
     # "jan 1 8am-5pm 2009" => "jan 1 2009 8am - 5pm"
     string.gsub!(/(.*)\b([a-z0-9:]+)\s*-\s*(\d[a-z0-9:]*)\s+(.*)/, "\\1 \\4 \\2 - \\3")
     
-    # STDERR.puts "preparsed: #{string.inspect}"
-    
     first_string, last_string = string.split(DELIMITER)
-    
-    if last_string && last_string =~ NUMERIC
-      last_string = first_string.sub(ENDS_NUMERIC, "\\1#{last_string}\\3")
-    end
+
+    # STDERR.puts "preparsed: #{string.split(DELIMITER).inspect}"
     
     if last_string && last_string =~ AMPM && !(first_string =~ AMPM)
       first_string += last_string[AMPM, 1]
@@ -43,12 +39,13 @@ class DateRange < Range
     
     first_range = Chronic.parse(first_string, :guess => false)
     first_date = first_range && first_range.first || Time.parse(first_string)
+    
+    return nil unless first_range
+    
     last_date = last_string ? 
                   Chronic.parse(last_string, :guess => false, :now => first_date).last :
                   first_range.last                
     new(first_date, last_date)
-  rescue => e
-    raise DateRangeError.new(e)
   end
   
   def to_s

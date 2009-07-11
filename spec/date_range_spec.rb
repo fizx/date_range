@@ -61,13 +61,10 @@ describe DateRange do
       
     end
     
-    it "should handle repeating ranges" do
+    it "should recognize repeating ranges" do
       range = DateRange.parse("thursdays")
       range.should be_repeating_weekly
-      
-      range = DateRange.parse("this thursdays")
-      range.should_not be_repeating_weekly
-
+    
       range = DateRange.parse("evenings")
       range.should_not be_repeating_weekly
       range.should be_repeating_daily
@@ -75,11 +72,33 @@ describe DateRange do
       range = DateRange.parse("thursday evenings")
       range.should be_repeating_weekly
       range.should_not be_repeating_daily
-
-      range = DateRange.parse("this thursday evenings")
-      range.should_not be_repeating_weekly
+      # 
+      # range = DateRange.parse("weekday evenings")
+      # range.should be_repeating_daily
+    end
+  end
+  
+  describe "#overlapping" do
+    it "should enumerate the repeating ranges between the dates" do
+      range = DateRange.parse("thursdays")
+      range.should be_repeating_weekly
       range.should_not be_repeating_daily
-      
+      bounds = DateRange.parse("7/1/09 - 7/31/09")
+      range.overlapping(bounds).should be_a(DateRangeList)
+      range.overlapping(bounds).to_s.should == "Jul  2, Jul  9, Jul 16, Jul 23, Jul 30"
+      range.overlapping(bounds).should == [
+        DateRange.parse("7/2/09"),
+        DateRange.parse("7/9/09"),
+        DateRange.parse("7/16/09"),
+        DateRange.parse("7/23/09"),
+        DateRange.parse("7/30/09")
+      ]
+    end
+    
+    it "should return a non-repeating range if its within the bounds" do
+      range = DateRange.parse("7/10/09")
+      bounds = DateRange.parse("7/1/09 - 7/31/09")
+      range.overlapping(bounds).should == [range]
     end
   end
   

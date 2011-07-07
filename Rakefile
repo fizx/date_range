@@ -5,7 +5,7 @@ begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     gem.name = "date_range"
-    gem.summary = %Q{TODO}
+    gem.summary = "Provides a clean interface for date ranges."
     gem.email = "kyle@kylemaxwell.com"
     gem.homepage = "http://github.com/fizx/date_range"
     gem.authors = ["Kyle Maxwell"]
